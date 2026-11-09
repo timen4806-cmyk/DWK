@@ -26,30 +26,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
-      - name: Accept Licenses & Install Platforms
+      - name: Install Additional SDK Components
         run: |
           set +e
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          yes | sdkmanager --licenses 2>/dev/null || true
-          sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" "platform-tools" 2>/dev/null || true
-          sdkmanager --channel=3 "platforms;android-36" "platforms;android-36.1" "build-tools;36.0.0" 2>/dev/null || true
-          
-          # Pre-accept all Android SDK licenses in fallback locations
-          mkdir -p "$ANDROID_HOME/licenses" "$HOME/.android/licenses" 2>/dev/null || true
-          printf "24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n84831b9409646a24c0f30564922ec13270a1147f\n" > "$ANDROID_HOME/licenses/android-sdk-license" 2>/dev/null || true
-          printf "84831b9409646a24c0f30564922ec13270a1147f\n504667f4c0de7af1a06de9f4b1727b84351f2910\n" > "$ANDROID_HOME/licenses/android-sdk-preview-license" 2>/dev/null || true
-          printf "601085b94cd77f6b54fd864d7f7ac5c8882fc20b\n" > "$ANDROID_HOME/licenses/android-googletv-license" 2>/dev/null || true
-          cp -r "$ANDROID_HOME/licenses/"* "$HOME/.android/licenses/" 2>/dev/null || true
+          sdkmanager "platforms;android-36.1" 2>/dev/null || true
+          sdkmanager --channel=3 "platforms;android-36.1" 2>/dev/null || true
           exit 0
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: false
 
       - name: Create .env Configuration
         run: |
@@ -78,11 +68,9 @@ jobs:
         run: |
           chmod +x gradlew
           export GRADLE_OPTS="-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
+          touch build.log
           set -o pipefail
-          if ! ./gradlew assembleDebug --stacktrace --no-daemon --no-configuration-cache --max-workers=2 -Pandroid.builder.sdkDownload=true 2>&1 | tee build.log; then
-            echo "::error title=Gradle Build Failed::$(grep -E "Execution failed|FAILED|Error:|Exception:" build.log | tail -n 5)"
-            exit 1
-          fi
+          ./gradlew assembleDebug --stacktrace --no-daemon --no-configuration-cache --max-workers=2 -Pandroid.builder.sdkDownload=true 2>&1 | tee build.log
 
       - name: Upload Build Log on Failure
         if: failure()
@@ -90,6 +78,7 @@ jobs:
         with:
           name: build-failure-log
           path: build.log
+          if-no-files-found: ignore
 
       - name: Prepare APK Output
         run: |
