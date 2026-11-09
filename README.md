@@ -35,4 +35,4 @@ Setiap kali Anda melakukan `git push` ke GitHub, GitHub Actions akan otomatis me
 3. Klik tab **Actions** di bilah atas.
 4. Klik riwayat alur kerja terbaru (**Build & Package APK**).
 5. Di bagian paling bawah halaman ringkasan (*Summary*), lihat bagian **Artifacts**.
-6. Klik **`Data-Warga-Kos-APK`** untuk mengunduh file `.zip` yang berisi berkas **`Data-Warga-Kos-debug.apk`** yang siap diinstal di HP Android.
+6. Klik **`Data-Warga-Kos-APK`** untuk mengunduh file `.zip` yang berisi berkas **`Data-Warga-Kos.apk`** yang siap diinstal di HP Android.
