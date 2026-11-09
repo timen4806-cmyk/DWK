@@ -15,7 +15,7 @@ permissions:
 jobs:
   build:
     name: Build & Package APK
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
@@ -30,14 +30,49 @@ jobs:
 
       - name: Configure Android SDK & Accept Licenses
         run: |
-          export ANDROID_HOME=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}
+          set +e
+          # Detect or fallback to standard Android SDK paths on GitHub runners
+          export ANDROID_HOME=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}
+          export ANDROID_SDK_ROOT=$ANDROID_HOME
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-          mkdir -p "$ANDROID_HOME/licenses" || true
-          echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" >> "$ANDROID_HOME/licenses/android-sdk-license"
-          echo -e "\n84831b9409646a24c0f30564922ec13270a1147f" >> "$ANDROID_HOME/licenses/android-sdk-preview-license"
-          echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e" >> "$ANDROID_HOME/licenses/android-sdk-license"
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+
+          # Ensure the runner user has write permissions to install packages & licenses
+          if [ -d "$ANDROID_HOME" ]; then
+            sudo chown -R $USER:$USER "$ANDROID_HOME" 2>/dev/null || true
+            sudo chmod -R 775 "$ANDROID_HOME" 2>/dev/null || true
+          fi
+
+          # Prepare licenses directory in SDK location and user home
+          mkdir -p "$ANDROID_HOME/licenses" 2>/dev/null || sudo mkdir -p "$ANDROID_HOME/licenses"
+          sudo chown -R $USER:$USER "$ANDROID_HOME/licenses" 2>/dev/null || true
+          mkdir -p "$HOME/.android/licenses" || true
+
+          # Write all official Android SDK license hashes
+          cat << 'EOF' > "$ANDROID_HOME/licenses/android-sdk-license"
+24333f8a63b6825ea9c5514f83c2829b004d1fee
+d56f5187479451eabf01fb78af6dfcb131a6481e
+84831b9409646a24c0f30564922ec13270a1147f
+EOF
+
+          cat << 'EOF' > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+84831b9409646a24c0f30564922ec13270a1147f
+504667f4c0de7af1a06de9f4b1727b84351f2910
+EOF
+
+          cat << 'EOF' > "$ANDROID_HOME/licenses/android-googletv-license"
+601085b94cd77f6b54fd864d7f7ac5c8882fc20b
+EOF
+
+          # Copy to ~/.android/licenses for legacy/fallback compatibility
+          cp -r "$ANDROID_HOME/licenses/"* "$HOME/.android/licenses/" 2>/dev/null || true
+
+          # Attempt to auto-accept remaining licenses with sdkmanager if present
+          SDKMANAGER=$(find "$ANDROID_HOME" -name sdkmanager 2>/dev/null | grep bin/sdkmanager | head -n 1)
+          if [ -n "$SDKMANAGER" ] && [ -x "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses 2>/dev/null || true
+          fi
+          exit 0
 
       - name: Create .env Configuration
         run: |
@@ -50,7 +85,7 @@ jobs:
         run: |
           if [ -f debug.keystore.base64 ] && [ ! -f debug.keystore ]; then
             echo "Restoring debug.keystore from base64..."
-            base64 -d debug.keystore.base64 > debug.keystore || true
+            base64 -d debug.keystore.base64 > debug.keystore 2>/dev/null || true
           fi
           # Fallback generation if keystore is missing or empty
           if [ ! -f debug.keystore ] || [ ! -s debug.keystore ]; then
@@ -67,7 +102,7 @@ jobs:
 
       - name: Build Android Debug APK
         run: |
-          ./gradlew assembleDebug --stacktrace --no-daemon -Pandroid.builder.sdkDownload=true
+          ./gradlew assembleDebug --stacktrace --no-daemon --no-configuration-cache -Pandroid.builder.sdkDownload=true
 
       - name: Prepare APK Output
         run: |
