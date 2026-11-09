@@ -48,21 +48,10 @@ jobs:
           sudo chown -R $USER:$USER "$ANDROID_HOME/licenses" 2>/dev/null || true
           mkdir -p "$HOME/.android/licenses" || true
 
-          # Write all official Android SDK license hashes
-          cat << 'EOF' > "$ANDROID_HOME/licenses/android-sdk-license"
-24333f8a63b6825ea9c5514f83c2829b004d1fee
-d56f5187479451eabf01fb78af6dfcb131a6481e
-84831b9409646a24c0f30564922ec13270a1147f
-EOF
-
-          cat << 'EOF' > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-84831b9409646a24c0f30564922ec13270a1147f
-504667f4c0de7af1a06de9f4b1727b84351f2910
-EOF
-
-          cat << 'EOF' > "$ANDROID_HOME/licenses/android-googletv-license"
-601085b94cd77f6b54fd864d7f7ac5c8882fc20b
-EOF
+          # Write all official Android SDK license hashes using printf (safe YAML indentation)
+          printf "24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n84831b9409646a24c0f30564922ec13270a1147f\n" > "$ANDROID_HOME/licenses/android-sdk-license"
+          printf "84831b9409646a24c0f30564922ec13270a1147f\n504667f4c0de7af1a06de9f4b1727b84351f2910\n" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+          printf "601085b94cd77f6b54fd864d7f7ac5c8882fc20b\n" > "$ANDROID_HOME/licenses/android-googletv-license"
 
           # Copy to ~/.android/licenses for legacy/fallback compatibility
           cp -r "$ANDROID_HOME/licenses/"* "$HOME/.android/licenses/" 2>/dev/null || true
