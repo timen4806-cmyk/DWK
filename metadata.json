@@ -1,0 +1,6 @@
+{
+  "name": "Data Warga Kos",
+  "description": "Aplikasi manajemen data warga kos native dengan sinkronisasi cloud real-time, Room database offline, autentikasi OAuth 2.0 & token, ekspor PDF/Excel terenkripsi, pratinjau dokumen, notifikasi push FCM, dan share multi-platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
