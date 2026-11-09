@@ -33,13 +33,9 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
-      - name: Install Additional SDK Components
+      - name: Configure SDK Properties
         run: |
-          set +e
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          sdkmanager "platforms;android-36.1" 2>/dev/null || true
-          sdkmanager --channel=3 "platforms;android-36.1" 2>/dev/null || true
-          exit 0
 
       - name: Create .env Configuration
         run: |
