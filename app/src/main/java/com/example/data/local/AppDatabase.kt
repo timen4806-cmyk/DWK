@@ -7,9 +7,11 @@ import androidx.room.RoomDatabase
 import com.example.data.model.SavedDocumentEntity
 import com.example.data.model.WargaKosEntity
 
+import com.example.data.model.Warga
+
 @Database(
-    entities = [WargaKosEntity::class, SavedDocumentEntity::class],
-    version = 1,
+    entities = [WargaKosEntity::class, SavedDocumentEntity::class, Warga::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

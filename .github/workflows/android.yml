@@ -38,7 +38,10 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
       - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          fi
 
       - name: Create .env Configuration
         run: |
