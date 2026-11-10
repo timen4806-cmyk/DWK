@@ -33,9 +33,14 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
 
-      - name: Configure SDK Properties
+      - name: Configure SDK Properties & Accept Licenses
         run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          set +e
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "sdk.dir=$SDK_PATH" > local.properties
+          mkdir -p "$SDK_PATH/licenses" "$HOME/.android/licenses" 2>/dev/null || true
+          yes | sdkmanager --licenses 2>/dev/null || true
+          exit 0
 
       - name: Grant Execute Permission for Gradlew
         run: |
@@ -89,7 +94,7 @@ jobs:
 
       - name: Build Android Debug APK
         run: |
-          chmod +x gradlew
+          if [ -f gradlew ]; then chmod +x gradlew; fi
           export GRADLE_OPTS="-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
           ./gradlew assembleDebug --stacktrace --no-daemon --no-configuration-cache --max-workers=2 -Pandroid.builder.sdkDownload=true
 
